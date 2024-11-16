@@ -1,4 +1,5 @@
-﻿using SimpleDotNetOpenAiChat.Hubs;
+﻿using Microsoft.AspNetCore.SignalR;
+using SimpleDotNetOpenAiChat.Hubs;
 using SimpleDotNetOpenAiChat.Repository;
 using SimpleDotNetOpenAiChat.Services;
 using SimpleDotNetOpenAiChat.Utilities;
@@ -44,10 +45,7 @@ namespace SimpleDotNetOpenAiChat.SampleWebClient.Hubs
         public MyChatHub(IChatMessageRepository chatMessageRepository, ChatService chatService,
             NotifyingMemoryStream notifyingMemoryStream) : base(chatMessageRepository, chatService, notifyingMemoryStream)
         {
-            GetConnectionFunc = () =>
-                {
-                    return "MySessionId";
-                };
+
         }
     }
 }

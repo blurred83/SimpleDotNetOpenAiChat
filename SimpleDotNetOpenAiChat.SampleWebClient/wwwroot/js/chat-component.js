@@ -40,6 +40,7 @@ function appendMessageToChat(user, message) {
 }
 
 function sendMessage() {
+    let sessionId = document.getElementById("hdnSessionId").value;
     let userMessage = document.getElementById("messageInput").value;
     if (userMessage.trim() === '') return; // Don't send empty messages
 
@@ -51,7 +52,7 @@ function sendMessage() {
     appendMessageToChat("You", userMessage);
 
     // Send the message to OpenAI via the SignalR hub
-    chatConnection.invoke("SendMessage", userMessage).catch(function (err) {
+    chatConnection.invoke("SendMessage", sessionId, userMessage).catch(function (err) {
         return console.error(err.toString());
     });
 
@@ -89,6 +90,7 @@ chatConnection.on("ReceiveMessage", function (message) {
         isAssistantResponding = false;
         document.getElementById("sendButton").disabled = false;
         currentAssistantDiv = null;
+        document.getElementById("chatBody").scrollTop = document.getElementById("chatBody").scrollHeight;
     } else if (message === "StartUserResponse") {
         // Create a new message element
         currentAssistantDiv = document.createElement("div");
@@ -117,6 +119,7 @@ chatConnection.on("ReceiveMessage", function (message) {
         isAssistantResponding = false;
         document.getElementById("sendButton").disabled = false;
         currentAssistantDiv = null;
+        document.getElementById("chatBody").scrollTop = document.getElementById("chatBody").scrollHeight;
     } else if (isAssistantResponding && currentAssistantDiv !== null) {
         // Append each message chunk to the assistant's message text
         currentAssistantDiv.querySelector(".flex-grow-1").textContent += message;
@@ -129,7 +132,8 @@ chatConnection.start().then(function () {
     // Initialize chat with the first assistant message
     appendMessageToChat("Assistant", firstAssistantMessage);
 
-    chatConnection.invoke("GetAllMessages");
+    let sessionId = document.getElementById("hdnSessionId").value;
+    chatConnection.invoke("GetAllMessages", sessionId);
 
     document.getElementById("sendButton").disabled = false;
 }).catch(function (err) {
@@ -172,6 +176,7 @@ document.getElementById("toggleChat").addEventListener("click", function () {
         chatFooter.style.display = "block";
         toggleIcon.classList.remove("fa-plus");
         toggleIcon.classList.add("fa-minus"); // Show collapse icon
+        document.getElementById("chatBody").scrollTop = document.getElementById("chatBody").scrollHeight;
     } else {
         chatBody.style.display = "none";
         chatFooter.style.display = "none";

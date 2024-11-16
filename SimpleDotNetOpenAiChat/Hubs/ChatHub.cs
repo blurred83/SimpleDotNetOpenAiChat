@@ -30,9 +30,7 @@ namespace SimpleDotNetOpenAiChat.Hubs
         /// For example, "You are a technical support assistant. You are here to help users with technical issues."
         /// </remarks>
         public abstract string SystemMessage { get; set; }
-
-        protected Func<string> GetConnectionFunc = null;
-
+        
         /// <summary>
         /// Whether to stream the response from the OpenAI chat assistant.
         /// If false, the response will be sent all at once.
@@ -56,17 +54,23 @@ namespace SimpleDotNetOpenAiChat.Hubs
         /// <summary>
         /// Sends a message to the OpenAI chat assistant.
         /// </summary>
+        /// <remarks>
+        /// The session ID uniquely identifies the chat. Use this to identify a chat session.
+        /// For instance, if you open a chat session in a new browser tab, and you pass the same session ID
+        /// from the last tab, this will load the chat history into the window.
+        /// If you don't specify a session ID, the SignalR connection ID will be used as the session ID.
+        /// In that case, whenever the page refreshes, the chat history will be lost.
+        /// </remarks>
         /// <param name="userMessage"></param>
+        /// <param name="sessionId"></param>
         /// <returns></returns>
-        public async Task SendMessage(string userMessage)
+        public async Task SendMessage(string sessionId, string userMessage)
         {
-            var connectionId = Context.ConnectionId;
-
-            var sessionId = connectionId;
-
-            if (GetConnectionFunc != null)
+            if (string.IsNullOrWhiteSpace(sessionId))
             {
-                sessionId = GetConnectionFunc();
+                var connectionId = Context.ConnectionId;
+
+                sessionId = connectionId;
             }
 
             // memoryCache should have a dictionary of chat messages for each sessionId; get or create it
@@ -141,15 +145,13 @@ namespace SimpleDotNetOpenAiChat.Hubs
             await Clients.Caller.SendAsync("ReceiveMessage", "EndAssistantResponse");
         }
 
-        public async Task GetAllMessages()
+        public async Task GetAllMessages(string sessionId)
         {
-            var connectionId = Context.ConnectionId;
-
-            var sessionId = connectionId;
-
-            if (GetConnectionFunc != null)
+            if (string.IsNullOrWhiteSpace(sessionId))
             {
-                sessionId = GetConnectionFunc();
+                var connectionId = Context.ConnectionId;
+
+                sessionId = connectionId;
             }
 
             // memoryCache should have a dictionary of chat messages for each sessionId; get or create it

@@ -15,6 +15,15 @@ namespace SimpleDotNetOpenAiChat.SampleWebClient
             // Add services to the container.
             builder.Services.AddRazorPages();
 
+            // Add session services
+            builder.Services.AddDistributedMemoryCache(); // Required for session state
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30); // Session timeout
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true; // For GDPR compliance
+            });
+
             builder.Services.AddSimpleDotNetOpenAiChatServices(opt =>
             {
                 opt.AzureSignalRConnectionString = builder.Configuration["AzureSignalRConnectionString"];
@@ -40,6 +49,9 @@ namespace SimpleDotNetOpenAiChat.SampleWebClient
             app.UseRouting();
 
             app.UseAuthorization();
+
+            // Enable session middleware
+            app.UseSession();
 
             app.MapRazorPages();
 
