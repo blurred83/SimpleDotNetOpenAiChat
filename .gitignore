@@ -396,3 +396,4 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+/SimpleDotNetOpenAiChat.SampleWebClient/Properties/ServiceDependencies/simpledotnetopenaichat - Web Deploy/profile.arm.json
