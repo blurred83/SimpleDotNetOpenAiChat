@@ -44,6 +44,11 @@ A .NET 8 Razor Pages project demonstrating how to use the class library and Java
 
 ### Configure Your Web Application
 
+First install the nuget package `SimpleDotNetOpenAiChat`. (Make sure to include pre-release packages if necessary.) )
+```
+dotnet add package SimpleDotNetOpenAiChat
+```
+
 Add the required services to your application by configuring your dependency injection container. Use the provided extension methods to simplify registration.
 
 ```
@@ -159,8 +164,8 @@ Note the chat-component.js can be delivered through jsdelivr, or you can get the
 
 ## Future Plans
 
-1. Publish the `SimpleDotNetOpenAiChat` class library to NuGet.
-2. Enhance the chat UI with additional features, such as themes and improved chat history management.
+1. Enhance the chat UI with additional features, such as themes and improved chat history management.
+2. add unit tests.
 
 ---
 
