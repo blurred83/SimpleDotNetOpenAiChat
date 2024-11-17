@@ -4,6 +4,8 @@
 
 This solution is ideal for developers looking to add an interactive chatbot with minimal configuration while maintaining flexibility for custom implementations.
 
+You can see a working demo [here](https://simpledotnetopenaichat-f2dqhgcfana6hgeg.eastus-01.azurewebsites.net/).
+
 ---
 
 ## Features
