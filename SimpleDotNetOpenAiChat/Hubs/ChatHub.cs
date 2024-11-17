@@ -114,12 +114,6 @@ namespace SimpleDotNetOpenAiChat.Hubs
                             streamMessageBufferCount = 0;
                             streamMessageBuffer.Clear();
                         }
-
-                        var messages = text.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
-                        foreach (var message in messages)
-                        {
-                            await Clients.Caller.SendAsync("ReceiveMessage", message);
-                        }
                     }
                     else
                     {

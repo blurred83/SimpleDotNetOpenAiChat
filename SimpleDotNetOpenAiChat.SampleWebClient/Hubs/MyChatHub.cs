@@ -45,7 +45,9 @@ namespace SimpleDotNetOpenAiChat.SampleWebClient.Hubs
         public MyChatHub(IChatMessageRepository chatMessageRepository, ChatService chatService,
             NotifyingMemoryStream notifyingMemoryStream) : base(chatMessageRepository, chatService, notifyingMemoryStream)
         {
-
+            // Only send a signalr message to the client every 5 messages. This is 1 by default, 
+            // so you can use this to limit the number of messages sent to the client.
+            StreamMessageBuffer = 5;
         }
     }
 }
