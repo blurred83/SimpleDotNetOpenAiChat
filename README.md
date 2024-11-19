@@ -64,32 +64,66 @@ builder.Services.AddSimpleDotNetOpenAiChatServices(opt =>
 });
 ```
 
-Ensure your application maps a SignalR hub for communication.
+You can add different bots with different functions. For instance, you can define a tech support bot that helps troubleshoot computer problems, and a joke bot that tells jokes. For each bot, define a configuration like this:
 
 ```
-app.MapHub<MyChatHub>("/myChatHub");
+builder.Services.Configure<ChatHubConfig>("JokeBot", options =>
+{
+    options.SystemMessage =
+        @"You are a joke telling bot. Your job is to tell jokes about whatever the user wants. Don't talk about anything else; just tell jokes.";
+    options.StreamResponse = true;
+    options.StreamMessageBuffer = 5;
+});
 ```
+
+Note this configuration is named "JokeBot" - give your configuration a meaningful name; you'll need it soon. 
+
+The arguments here are: 
+
+- **SystemMessage**: Tell the bot what to do.
+- **StreamResponse**: Whether to stream the response or just send full messages once they are finished. The default is true.
+- **StreamMessageBuffer**: To limit the number of SignalR messages transmitted, this will only send blocks of text from server to client every x tokens received. (The default is one; by default it will stream each token.) If you set this to 5, it will stream chunks of 5 tokens at a time, reducing the number of total SignalR messages sent by 80%.
 
 ### Create a Chat Hub
 
-Inherit from the `ChatHub` class to implement your chat logic. Define the system message to specify the assistant's behavior and configure streaming options as needed.
+Create a class that extends `ChatHub`. It doesn't need to do anything else, but you could extend it to add custom functionality.
 
 ```
 using SimpleDotNetOpenAiChat.Hubs;
+using SimpleDotNetOpenAiChat.Models;
+using SimpleDotNetOpenAiChat.Repository;
+using SimpleDotNetOpenAiChat.Services;
+using SimpleDotNetOpenAiChat.Utilities;
 
-public class MyChatHub : ChatHub
+public class JokeHub : ChatHub
 {
-    public override string SystemMessage { get; set; } =
-        "You are a helpful assistant. Answer questions and assist with troubleshooting.";
-
-    public MyChatHub(IChatMessageRepository chatMessageRepository, ChatService chatService,
-        NotifyingMemoryStream notifyingMemoryStream) 
-        : base(chatMessageRepository, chatService, notifyingMemoryStream)
+    public JokeHub(IChatMessageRepository chatMessageRepository, ChatService chatService,
+        NotifyingMemoryStream notifyingMemoryStream, ChatHubConfig config) : base(chatMessageRepository, chatService, notifyingMemoryStream, config)
     {
-        StreamResponse = true; // Enable streaming
-        StreamMessageBuffer = 3; // Buffer 3 tokens before sending
+
     }
 }
+```
+
+Go back to the Program.cs, and add a block like this (right where you left off, after defining the named configuration): 
+
+```
+builder.Services.AddTransient<JokeHub>(sp =>
+{
+    var chatMessageRepository = sp.GetRequiredService<IChatMessageRepository>();
+    var chatService = sp.GetRequiredService<ChatService>();
+    var notifyingMemoryStream = sp.GetRequiredService<NotifyingMemoryStream>();
+    var config = sp.GetRequiredService<IOptionsSnapshot<ChatHubConfig>>().Get("JokeBot");
+    return new JokeHub(chatMessageRepository, chatService, notifyingMemoryStream, config);
+});
+```
+
+Note here you applied the name of the configuration at the end of the "var config..."  line.
+
+Finally, right before app.Run(), add this:
+
+```
+app.MapHub<JokeHub>("/jokeHub");
 ```
 
 ### Add the Frontend

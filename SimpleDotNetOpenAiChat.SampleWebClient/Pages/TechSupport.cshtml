@@ -1,12 +1,12 @@
 ﻿@page
-@model IndexModel
+@model TechSupportModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Tech Support Page";
 }
 
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
-    <p>Chat with the agent in the bottom right corner.</p>
+    <p>Chat with the agent in the bottom right corner. It can provide tech support.</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.15/signalr.min.js"></script>
@@ -27,6 +27,6 @@
     </div>
 </div>
 <input type="hidden" id="hdnFirstAssistantMessage" value="I am a tech support agent. How can I help you?" />
-<input type="hidden" id="hdnChatHubUrl" value="/myChatHub" />
-<input type="hidden" id="hdnSessionId" value="@Model.SessionId" />
+<input type="hidden" id="hdnChatHubUrl" value="/techSupportHub" />
+<input type="hidden" id="hdnSessionId" value="@Model.TechSupportSessionId" />
 <script src="https://cdn.jsdelivr.net/gh/blurred83/SimpleDotNetOpenAiChat@v1.0.0-alpha.2/js/chat-component.js"></script>

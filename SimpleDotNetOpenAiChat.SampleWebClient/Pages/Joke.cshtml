@@ -1,0 +1,32 @@
+﻿@page
+@model JokeModel
+@{
+    ViewData["Title"] = "Joke Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Joke Page</h1>
+    <p>Chat with the agent in the bottom right corner. It tells jokes!</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.15/signalr.min.js"></script>
+
+<div id="chatWidget" class="chat-widget card shadow-lg position-fixed bottom-0 end-0 m-3" style="width: 400px; z-index: 9999;">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <span>AI Chat</span>
+        <button id="toggleChat" class="btn btn-sm btn-outline-light">
+            <i id="toggleIcon" class="fas fa-plus"></i> <!-- Expand Icon -->
+        </button>
+    </div>
+    <div id="chatBody" class="card-body overflow-auto" style="height: 250px; border: 1px solid #eee; margin-bottom: 10px; display: none;"></div>
+    <div id="chatFooter" class="card-footer p-2" style="display: none;">
+        <div class="input-group">
+            <textarea id="messageInput" class="form-control" placeholder="Type your message..." style="max-height: 60px;" rows="1"></textarea>
+            <button id="sendButton" class="btn btn-primary" disabled>Send</button>
+        </div>
+    </div>
+</div>
+<input type="hidden" id="hdnFirstAssistantMessage" value="I tell jokes. What do you want to hear a joke about?" />
+<input type="hidden" id="hdnChatHubUrl" value="/jokeHub" />
+<input type="hidden" id="hdnSessionId" value="@Model.JokeSessionId" />
+<script src="https://cdn.jsdelivr.net/gh/blurred83/SimpleDotNetOpenAiChat@v1.0.0-alpha.2/js/chat-component.js"></script>

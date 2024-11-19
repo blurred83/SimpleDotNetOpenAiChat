@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Identity.Client;
 using OpenAI.Chat;
+using SimpleDotNetOpenAiChat.Models;
 using SimpleDotNetOpenAiChat.Repository;
 using SimpleDotNetOpenAiChat.Services;
 using SimpleDotNetOpenAiChat.Utilities;
@@ -17,38 +18,49 @@ namespace SimpleDotNetOpenAiChat.Hubs
     /// The SystemMessage property is the system message for the OpenAI chat assistant.
     /// (e.g. "You are a technical support assistant. You are here to help users with technical issues.")
     /// </remarks>
-    public abstract class ChatHub : Hub
+    public class ChatHub : Hub
     {
         private readonly IChatMessageRepository _chatMessageRepository;
         private readonly ChatService _chatService;
         private readonly NotifyingMemoryStream _notifyingMemoryStream;
+
+        // Event to notify subscribers that a message has been received
+        public delegate void MessageReceivedEventHandler(object sender, ChatMessage message);
+        public event MessageReceivedEventHandler MessageReceived;
 
         /// <summary>
         /// The system message for the OpenAI chat assistant.
         /// </summary>
         /// <remarks>
         /// For example, "You are a technical support assistant. You are here to help users with technical issues."
+        /// The default is "You are a helpful assistant."
         /// </remarks>
-        public abstract string SystemMessage { get; set; }
+        private readonly string _systemMessage = "You are a helpful assistant.";
         
         /// <summary>
         /// Whether to stream the response from the OpenAI chat assistant.
         /// If false, the response will be sent all at once.
         /// </summary>
-        public bool StreamResponse = true;
+        private readonly bool _streamResponse = true;
 
         /// <summary>
         /// The number of messages to buffer before sending to the client.
         /// Useful to limit the number of SignalR messages sent to the client.
         /// </summary>
-        public int StreamMessageBuffer = 1;
+        private readonly int _streamMessageBuffer = 1;
 
-        public ChatHub(IChatMessageRepository chatMessageRepository, ChatService chatService,
-            NotifyingMemoryStream notifyingMemoryStream)
+        protected ChatHub(IChatMessageRepository chatMessageRepository, ChatService chatService,
+            NotifyingMemoryStream notifyingMemoryStream, ChatHubConfig config)
         {
             _chatMessageRepository = chatMessageRepository;
             _chatService = chatService;
             _notifyingMemoryStream = notifyingMemoryStream;
+            if (config != null)
+            {
+                _systemMessage = config.SystemMessage;
+                _streamResponse = config.StreamResponse;
+                _streamMessageBuffer = config.StreamMessageBuffer;
+            }
         }
 
         /// <summary>
@@ -76,16 +88,16 @@ namespace SimpleDotNetOpenAiChat.Hubs
             // memoryCache should have a dictionary of chat messages for each sessionId; get or create it
             var chatMessages = _chatMessageRepository.GetChatMessages(sessionId);
 
-            if (!string.IsNullOrWhiteSpace(SystemMessage))
+            if (!string.IsNullOrWhiteSpace(_systemMessage))
             {
                 // check if _chatMessages has any system messages
                 if (chatMessages.Count > 0 && chatMessages[0] is SystemChatMessage)
                 {
-                    chatMessages[0] = new SystemChatMessage(SystemMessage);
+                    chatMessages[0] = new SystemChatMessage(_systemMessage);
                 }
                 else
                 {
-                    chatMessages.Insert(0, new SystemChatMessage(SystemMessage));
+                    chatMessages.Insert(0, new SystemChatMessage(_systemMessage));
                 }
             }
 
@@ -98,17 +110,17 @@ namespace SimpleDotNetOpenAiChat.Hubs
             int streamMessageBufferCount = 0;
             StringBuilder streamMessageBuffer = new StringBuilder();
 
-            if (StreamResponse)
+            if (_streamResponse)
             {
                 _notifyingMemoryStream.DataWritten += async (buffer, offset, count) =>
                 {
                     var text = Encoding.UTF8.GetString(buffer, offset, count);
 
-                    if (StreamMessageBuffer > 1)
+                    if (_streamMessageBuffer > 1)
                     {
                         streamMessageBufferCount++;
                         streamMessageBuffer.Append(text);
-                        if (streamMessageBufferCount > StreamMessageBuffer)
+                        if (streamMessageBufferCount > _streamMessageBuffer)
                         {
                             await Clients.Caller.SendAsync("ReceiveMessage", streamMessageBuffer.ToString());
                             streamMessageBufferCount = 0;
@@ -129,12 +141,14 @@ namespace SimpleDotNetOpenAiChat.Hubs
                 await Clients.Caller.SendAsync("ReceiveMessage", streamMessageBuffer.ToString());
             }
 
-            if (!StreamResponse)
+            if (!_streamResponse)
             {
                 await Clients.Caller.SendAsync("ReceiveMessage", continueChatResult.NewMessage);
             }
 
             _chatMessageRepository.AddChatMessage(sessionId, continueChatResult.NewMessage);
+
+            MessageReceived?.Invoke(this, continueChatResult.NewMessage);
 
             await Clients.Caller.SendAsync("ReceiveMessage", "EndAssistantResponse");
         }
