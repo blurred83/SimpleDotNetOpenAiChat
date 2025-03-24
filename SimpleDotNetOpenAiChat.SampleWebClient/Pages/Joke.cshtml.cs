@@ -16,12 +16,12 @@ namespace SimpleDotNetOpenAiChat.SampleWebClient.Pages
         public void OnGet()
         {
             // Check if the session ID already exists
-            JokeSessionId = HttpContext.Session.GetString("JokeSessionId");
+            JokeSessionId = HttpContext.Session.GetString("StoreSessionId");
             if (string.IsNullOrEmpty(JokeSessionId))
             {
                 // Generate and store a new session ID
                 JokeSessionId = Guid.NewGuid().ToString();
-                HttpContext.Session.SetString("JokeSessionId", JokeSessionId);
+                HttpContext.Session.SetString("StoreSessionId", JokeSessionId);
             }
         }
     }
